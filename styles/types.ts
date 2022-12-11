@@ -7,6 +7,7 @@ export type Color =
   | 'text-secondary'
   | 'text-muted'
   | 'success'
+  | 'error'
   | 'shadow'
 
 export type ColorArgs = [color: Color, alpha: number]

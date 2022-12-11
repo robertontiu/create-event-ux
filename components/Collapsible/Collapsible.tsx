@@ -11,11 +11,13 @@ import { animated, useSpring } from 'react-spring'
 
 export type CollapsibleProps = PropsWithChildren<{
   className?: string
+  contentContainerClassName?: string
   expanded: boolean
 }>
 
 export const Collapsible: FC<CollapsibleProps> = ({
   className,
+  contentContainerClassName,
   expanded,
   children,
 }) => {
@@ -49,7 +51,9 @@ export const Collapsible: FC<CollapsibleProps> = ({
       className={clsx(collapsibleStyles.root, className)}
       style={animatedRootStyles}
     >
-      <div ref={contentElementRef}>{children}</div>
+      <div ref={contentElementRef} className={contentContainerClassName}>
+        {children}
+      </div>
     </animated.div>
   )
 }

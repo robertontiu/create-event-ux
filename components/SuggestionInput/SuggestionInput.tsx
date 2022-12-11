@@ -20,6 +20,11 @@ export type SuggestionInputProps<TSuggestion = unknown> = {
   suggestionOverlayPlacementOffset?: number
   getSuggestions: (query: string) => TSuggestion[]
   suggestionKeyExtractor?: ListSelectorProps<TSuggestion>['keyExtractor']
+  /**
+   * This function should return a string from a given suggestion which will
+   * be added to the input value when the suggestion is selected
+   */
+  suggestionAutocompleteExtractor: (suggestion: TSuggestion) => string
   renderSuggestion: ListSelectorProps<TSuggestion>['renderItem']
   onFocus?: () => void
   onBlur?: () => void
@@ -38,6 +43,7 @@ export function SuggestionInput<TSuggestion = unknown>({
   suggestionOverlayPlacementOffset,
   getSuggestions,
   suggestionKeyExtractor,
+  suggestionAutocompleteExtractor,
   renderSuggestion,
   onFocus,
   onBlur,
@@ -51,6 +57,7 @@ export function SuggestionInput<TSuggestion = unknown>({
   const [suggestions, setSuggestions] = React.useState<TSuggestion[]>([])
   const [isSuggestionPopoverVisible, setIsSuggestionPopoverVisible] =
     useState(false)
+
   const queryStartIndeRef = useRef(-1)
 
   const handleUpdateSuggestions = useEvent(() => {
@@ -68,6 +75,8 @@ export function SuggestionInput<TSuggestion = unknown>({
       const newSuggestions = getSuggestions(query.text)
       setSuggestions(newSuggestions)
       setIsSuggestionPopoverVisible(newSuggestions.length > 0)
+    } else {
+      setIsSuggestionPopoverVisible(false)
     }
   })
 
@@ -107,6 +116,16 @@ export function SuggestionInput<TSuggestion = unknown>({
           renderItem={renderSuggestion}
           onSelect={(suggestion, index) => {
             onSelectSuggestion(suggestion, index)
+            onChange(
+              getValueWithSelection({
+                currentValue: value,
+                selectionStart: inputElementRef.current?.selectionStart ?? 0,
+                selectionEnd: inputElementRef.current?.selectionEnd ?? 0,
+                queryStartIndex: queryStartIndeRef.current,
+                selectionAutocomplete:
+                  suggestionAutocompleteExtractor(suggestion),
+              })
+            )
             setIsSuggestionPopoverVisible(false)
             inputElementRef.current?.focus()
           }}
@@ -149,8 +168,6 @@ function getQuery({
   selectionEnd: number
   queryStartIndex: number
 }) {
-  console.log(value, selectionStart, selectionEnd, queryStartIndex)
-
   // Do not suggest anything if the user selected a part of the text
   if (selectionStart !== selectionEnd) {
     return {
@@ -171,10 +188,36 @@ function getQuery({
       ? 0
       : value.substring(0, selectionStart).lastIndexOf(' ') + 1
 
-  console.log('new start index', startIndex)
-
   return {
     text: value.substring(startIndex, selectionStart),
     startIndex,
   }
+}
+
+function getValueWithSelection({
+  currentValue,
+  selectionStart,
+  selectionEnd,
+  queryStartIndex,
+  selectionAutocomplete,
+}: {
+  currentValue: string
+  selectionStart: number
+  selectionEnd: number
+  queryStartIndex: number
+  selectionAutocomplete: string
+}) {
+  // If there is a selection or the query start index is invalid
+  // skip
+  if (
+    queryStartIndex === -1 ||
+    selectionStart !== selectionEnd ||
+    selectionStart < queryStartIndex
+  ) {
+    return currentValue
+  }
+
+  const valueBeforeSelection = currentValue.substring(0, queryStartIndex)
+  const valueAfterSelection = currentValue.substring(selectionStart)
+  return `${valueBeforeSelection}${selectionAutocomplete} ${valueAfterSelection}`
 }

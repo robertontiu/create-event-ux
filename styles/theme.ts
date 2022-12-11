@@ -10,6 +10,7 @@ export const theme: Theme = {
     'text-secondary': '#848793',
     'text-muted': '#BDBFC5',
     success: '#19BE2E',
+    error: '#CD4747',
     shadow: '#000000',
   },
 }
