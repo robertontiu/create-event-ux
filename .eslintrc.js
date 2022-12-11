@@ -2,9 +2,6 @@ const path = require('path')
 
 module.exports = {
   parser: '@typescript-eslint/parser',
-  parserOptions: {
-    project: path.resolve(__dirname, 'tsconfig.json'),
-  },
   plugins: ['@typescript-eslint', 'react', 'react-hooks'],
   extends: [
     'next/core-web-vitals',
@@ -12,7 +9,6 @@ module.exports = {
     'plugin:@typescript-eslint/recommended',
     'plugin:react/recommended',
     'plugin:react-hooks/recommended',
-    'plugin:@boon-tv/recommended',
   ],
   ignorePatterns: ['*.js'],
   rules: {
@@ -52,5 +48,6 @@ module.exports = {
     'react/jsx-max-depth': ['error', { max: 8 }],
     'react/jsx-no-useless-fragment': 'error',
     'react/jsx-pascal-case': 'error',
+    'react/function-component-definition': 0, // Arrow functions do not play nicely with typescript generics :(
   },
 }
