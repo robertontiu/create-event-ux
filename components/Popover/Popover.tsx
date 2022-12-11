@@ -11,10 +11,9 @@ import React, {
 } from 'react'
 import { createPortal } from 'react-dom'
 import { animated, useSpring } from 'react-spring'
-import { useClickOutside } from '~/hooks'
+import { useClickOutside, useCreatePortalElement } from '~/hooks'
 import { isDomNodeParentOf } from '~/utils/isDomNodeParentOf'
 import { popoverStyles, popoverVars } from './Popover.css'
-import { usePopoverPortalElement } from './usePopoverPortalElement'
 
 export type PopoverProps = PropsWithChildren<{
   className?: string
@@ -37,7 +36,11 @@ export const Popover: FC<PopoverProps> = ({
   children,
   onVisibilityChange,
 }) => {
-  const portalElement = usePopoverPortalElement()
+  const portalElement = useCreatePortalElement({
+    hostElementId: 'popover-host',
+    hostElementClassName: popoverStyles.host,
+  })
+
   const rootElementRef = useRef<HTMLDivElement>(null)
   const overlayElementRef = useRef<HTMLDivElement>(null)
 
@@ -81,31 +84,37 @@ export const Popover: FC<PopoverProps> = ({
     },
   })
 
+  const renderOverlay = () => {
+    if (!portalElement) {
+      return null
+    }
+
+    return createPortal(
+      <animated.div
+        ref={overlayElementRef}
+        className={clsx(popoverStyles.overlay, overlayClassName)}
+        style={{
+          ...assignInlineVars({
+            [popoverVars.overlayTop]: `${overlayTop}px`,
+            [popoverVars.overlayLeft]: `${overlayLeft}px`,
+            [popoverVars.overlayWidth]: `${overlayWidth}px`,
+          }),
+          opacity: overlayAnimation.state,
+          transform: overlayAnimation.state.to((value) => `scaleY(${value})`),
+        }}
+      >
+        {overlay}
+      </animated.div>,
+      portalElement
+    )
+  }
+
   return (
     <Fragment>
       <div ref={rootElementRef} className={clsx(popoverStyles.root, className)}>
         {children}
       </div>
-      {createPortal(
-        <animated.div
-          ref={overlayElementRef}
-          className={clsx(popoverStyles.overlay, overlayClassName)}
-          style={{
-            ...assignInlineVars({
-              [popoverVars.overlayTop]: `${overlayTop}px`,
-              [popoverVars.overlayLeft]: `${overlayLeft}px`,
-              [popoverVars.overlayWidth]: `${overlayWidth}px`,
-            }),
-            opacity: overlayAnimation.state,
-            transform: overlayAnimation.state
-              .to([0, 1], [-placementOffset * 0.5, 0])
-              .to((value) => `translate3d(0, ${value}px, 0)`),
-          }}
-        >
-          {overlay}
-        </animated.div>,
-        portalElement
-      )}
+      {renderOverlay()}
     </Fragment>
   )
 }

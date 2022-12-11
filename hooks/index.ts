@@ -1,4 +1,5 @@
 export * from './useChangeEffect'
 export * from './useClickOutside'
+export * from './useCreatePortalElement'
 export * from './useEvent'
 export * from './useKeyPressEffect'

@@ -43,7 +43,9 @@ export const TextHighlight: FC<TextHighlightProps> = ({
         <span
           key={index}
           className={
-            part === highlight ? textHighlightStyles.highlightedText : undefined
+            part.toLowerCase() === highlight.toLowerCase()
+              ? textHighlightStyles.highlightedText
+              : undefined
           }
         >
           {part}

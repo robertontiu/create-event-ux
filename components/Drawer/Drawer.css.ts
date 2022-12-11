@@ -22,9 +22,10 @@ const root = style({
   width,
   height: '100vh',
   transform: 'translate3d(100%, 0, 0)',
-  transition: 'transform 0.3s ease-in-out',
+  transition: 'transform 0.15s linear',
   backgroundColor: color('background'),
   boxShadow: `0px 0.5px 1px 0.5px ${color(['shadow', 0.1])}`,
+  pointerEvents: 'auto',
 })
 
 const rootOpen = style({

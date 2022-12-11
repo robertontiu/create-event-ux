@@ -1,15 +1,19 @@
 import Head from 'next/head'
-import Image from 'next/image'
-import { Fragment } from 'react'
+import { Fragment, useState } from 'react'
+import { CreateEventDrawer } from '~/components/CreateEventDrawer'
+import { CreateEventTrigger } from '~/components/CreateEventTrigger'
 
 export default function Home() {
+  const [isDrawerVisible, setIsDrawerVisible] = useState(false)
+
   return (
     <Fragment>
       <Head>
         <title>Create Event UX</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <h1>TODO</h1>
+      <CreateEventTrigger onClick={() => setIsDrawerVisible(true)} />
+      <CreateEventDrawer open={isDrawerVisible} />
     </Fragment>
   )
 }

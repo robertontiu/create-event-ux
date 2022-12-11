@@ -67,7 +67,7 @@ export function ListSelector<TItem = unknown>({
 
   const scrollToIndex = (index: number) => {
     const element = rootElementRef.current?.querySelector(
-      `:scope > div > *:nth-child(${index + 1})`
+      `:scope > *:nth-child(${index + 1})`
     )
     element?.scrollIntoView(false)
   }

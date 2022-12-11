@@ -1,4 +1,5 @@
 import rgba from 'color-rgba'
+import { theme } from '../theme'
 import { ColorProp } from '../types'
 
 /**
@@ -7,6 +8,6 @@ import { ColorProp } from '../types'
 export function color(prop: ColorProp) {
   const [colorName, alpha] = typeof prop === 'string' ? [prop, 1.0] : prop
 
-  const [r, g, b] = rgba(colorName) ?? [0, 0, 0]
+  const [r, g, b] = rgba(theme.colors[colorName]) ?? [0, 0, 0]
   return `rgba(${r}, ${g}, ${b}, ${alpha})`
 }

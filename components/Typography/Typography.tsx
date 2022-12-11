@@ -42,6 +42,7 @@ export type TypographyProps = PropsWithChildren<{
 
 export const Typography: FC<TypographyProps> = ({
   className,
+  style,
   as: Component = 'span',
   variant = 'body',
   align = 'left',
@@ -58,10 +59,13 @@ export const Typography: FC<TypographyProps> = ({
         typeof numberOfLines === 'number' && typographyStyles.rootClamp,
         className
       )}
-      style={assignInlineVars({
-        [typographyVars.color]: color(colorProp),
-        [typographyVars.numberOfLines]: numberOfLines?.toString() ?? '0',
-      })}
+      style={{
+        ...assignInlineVars({
+          [typographyVars.color]: color(colorProp),
+          [typographyVars.numberOfLines]: numberOfLines?.toString() ?? '0',
+        }),
+        ...style,
+      }}
     >
       {children}
     </Component>

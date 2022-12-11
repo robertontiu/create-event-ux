@@ -23,6 +23,8 @@ const overlay = style({
   top: overlayTop,
   left: overlayLeft,
   width: overlayWidth,
+  pointerEvents: 'auto',
+  transformOrigin: '0% 0%',
   boxShadow: `0px 20px 30px 1px ${color(['shadow', 0.1])}, 0px 2px 8px ${color([
     'shadow',
     0.2,

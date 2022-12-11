@@ -7,6 +7,7 @@ const input = style({
   padding: 0,
   border: 'none',
   backgroundColor: color('background'),
+  outline: 'none',
   selectors: {
     '&::placeholder': {
       color: color('text-muted'),

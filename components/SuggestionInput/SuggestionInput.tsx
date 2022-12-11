@@ -1,5 +1,6 @@
 import clsx from 'clsx'
 import React, { useEffect, useRef, useState } from 'react'
+import { useDebouncedCallback } from 'use-debounce'
 import { useEvent } from '~/hooks'
 import { ListSelector, ListSelectorProps } from '../ListSelector'
 import { Popover } from '../Popover'
@@ -7,6 +8,11 @@ import { suggestionInputStyles } from './SuggestionInput.css'
 
 export type SuggestionInputProps<TSuggestion = unknown> = {
   value: string
+  /**
+   * @default false
+   */
+  autoFocus?: boolean
+  placeholder?: string
   className?: string
   inputClassName?: string
   suggestionOverlayClassName?: string
@@ -15,12 +21,16 @@ export type SuggestionInputProps<TSuggestion = unknown> = {
   getSuggestions: (query: string) => TSuggestion[]
   suggestionKeyExtractor?: ListSelectorProps<TSuggestion>['keyExtractor']
   renderSuggestion: ListSelectorProps<TSuggestion>['renderItem']
+  onFocus?: () => void
+  onBlur?: () => void
   onChange: (value: string) => void
   onSelectSuggestion: ListSelectorProps<TSuggestion>['onSelect']
 }
 
 export function SuggestionInput<TSuggestion = unknown>({
   value,
+  autoFocus = false,
+  placeholder,
   className,
   inputClassName,
   suggestionOverlayClassName,
@@ -29,10 +39,15 @@ export function SuggestionInput<TSuggestion = unknown>({
   getSuggestions,
   suggestionKeyExtractor,
   renderSuggestion,
+  onFocus,
+  onBlur,
   onChange,
   onSelectSuggestion,
 }: SuggestionInputProps<TSuggestion>) {
   const inputElementRef = useRef<HTMLInputElement>(null)
+
+  const [isInputFocused, setIsInputFocused] = useState(false)
+
   const [suggestions, setSuggestions] = React.useState<TSuggestion[]>([])
   const [isSuggestionPopoverVisible, setIsSuggestionPopoverVisible] =
     useState(false)
@@ -43,7 +58,9 @@ export function SuggestionInput<TSuggestion = unknown>({
       value: inputElementRef.current?.value ?? '',
       selectionStart: inputElementRef.current?.selectionStart ?? 0,
       selectionEnd: inputElementRef.current?.selectionEnd ?? 0,
-      queryStartIndex: queryStartIndeRef.current,
+      queryStartIndex: isSuggestionPopoverVisible
+        ? queryStartIndeRef.current
+        : -1,
     })
 
     queryStartIndeRef.current = query.startIndex
@@ -54,19 +71,25 @@ export function SuggestionInput<TSuggestion = unknown>({
     }
   })
 
-  // Update suggestions when selection changes
-  useEffect(() => {
-    const inputElement = inputElementRef.current
-    if (inputElement) {
-      inputElement.addEventListener('selectionchange', handleUpdateSuggestions)
-      return () => {
-        inputElement.removeEventListener(
-          'selectionchange',
-          handleUpdateSuggestions
-        )
-      }
+  // When clicking the suggestions the input fires a blur event
+  // begfore the actual click can refocus
+  // Because of that we will wait with hiding the popover until
+  // that interaction has been handled
+  const debouncedHandleHideSuggestionsOnBlur = useDebouncedCallback(() => {
+    if (!isInputFocused) {
+      setIsSuggestionPopoverVisible(false)
     }
-  }, [handleUpdateSuggestions])
+  }, 250)
+
+  // Input autofocus handler
+  useEffect(() => {
+    if (inputElementRef.current && autoFocus) {
+      inputElementRef.current.focus()
+    }
+  }, [autoFocus])
+
+  // TODO:
+  // Handle selection changes and update suggestions accordingly
 
   return (
     <Popover
@@ -78,12 +101,14 @@ export function SuggestionInput<TSuggestion = unknown>({
         <ListSelector
           className={suggestionListClassName}
           items={suggestions}
+          selectedIndex={isSuggestionPopoverVisible ? 0 : undefined}
           keyboardNavigationEnabled={isSuggestionPopoverVisible}
           keyExtractor={suggestionKeyExtractor}
           renderItem={renderSuggestion}
           onSelect={(suggestion, index) => {
             onSelectSuggestion(suggestion, index)
             setIsSuggestionPopoverVisible(false)
+            inputElementRef.current?.focus()
           }}
         />
       }
@@ -93,9 +118,17 @@ export function SuggestionInput<TSuggestion = unknown>({
         ref={inputElementRef}
         className={clsx(suggestionInputStyles.input, inputClassName)}
         type={'text'}
+        placeholder={placeholder}
         value={value}
-        onBlur={() => setIsSuggestionPopoverVisible(false)}
-        onFocus={handleUpdateSuggestions}
+        onBlur={() => {
+          setIsInputFocused(false)
+          debouncedHandleHideSuggestionsOnBlur()
+          onBlur?.()
+        }}
+        onFocus={() => {
+          setIsInputFocused(true)
+          onFocus?.()
+        }}
         onChange={(e) => {
           handleUpdateSuggestions()
           onChange(e.target.value)
@@ -116,6 +149,8 @@ function getQuery({
   selectionEnd: number
   queryStartIndex: number
 }) {
+  console.log(value, selectionStart, selectionEnd, queryStartIndex)
+
   // Do not suggest anything if the user selected a part of the text
   if (selectionStart !== selectionEnd) {
     return {
@@ -135,6 +170,8 @@ function getQuery({
     value.indexOf(' ') === -1
       ? 0
       : value.substring(0, selectionStart).lastIndexOf(' ') + 1
+
+  console.log('new start index', startIndex)
 
   return {
     text: value.substring(startIndex, selectionStart),
