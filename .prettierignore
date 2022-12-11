@@ -1,0 +1,8 @@
+.cache/
+.idea/
+.vscode/
+.yarn/
+dist/
+.next/
+node_modules/
+web-build/
